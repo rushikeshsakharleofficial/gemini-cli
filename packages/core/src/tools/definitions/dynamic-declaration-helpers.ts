@@ -38,32 +38,33 @@ import {
   * Returns the FunctionDeclaration for sending input to a shell process.
   */
   export function getSendShellInputDeclaration(): FunctionDeclaration {
-  return {
-    name: SEND_SHELL_INPUT_TOOL_NAME,
-    description:
-      'Sends an input string (e.g., keystrokes, passwords, or answers to prompts) to a running background shell process identified by its PID.',
-    parametersJsonSchema: {
-      type: 'object',
-      properties: {
-        [SEND_SHELL_INPUT_PARAM_PID]: {
-          type: 'integer',
-          description: 'The process ID (PID) of the background process.',
+    return {
+      name: 'send_shell_input',
+      description:
+        'Sends an input string (e.g., keystrokes, passwords, or answers to prompts) to a running background shell process identified by its PID.',
+      parametersJsonSchema: {
+        type: 'object',
+        properties: {
+          pid: {
+            type: 'integer',
+            description: 'The process ID (PID) of the background process.',
+          },
+          input: {
+            type: 'string',
+            description:
+              'The input string to send. Use `\\n` or `\\r` for Enter.',
+          },
+          is_sensitive: {
+            type: 'boolean',
+            description:
+              'If true, the input will not be logged to the model history (use for passwords).',
+          },
         },
-        [SEND_SHELL_INPUT_PARAM_INPUT]: {
-          type: 'string',
-          description:
-            'The input string to send. Use `\\n` or `\\r` for Enter.',
-        },
-        [SEND_SHELL_INPUT_PARAM_SENSITIVE]: {
-          type: 'boolean',
-          description:
-            'If true, the input will not be logged to the model history (use for passwords).',
-        },
+        required: ['pid', 'input'],
       },
-      required: [SEND_SHELL_INPUT_PARAM_PID, SEND_SHELL_INPUT_PARAM_INPUT],
-    },
-  };
+    };
   }
+
   /**
   * Generates the platform-specific description for the shell tool.
 
@@ -150,7 +151,7 @@ export function getShellDeclaration(
           description:
             'Set to true if this command should be run in the background (e.g. for long-running servers or watchers). The command will be started, allowed to run for a brief moment to check for immediate errors, and then moved to the background.',
         },
-        [SHELL_PARAM_INTERACTIVE]: {
+        interactive: {
           type: 'boolean',
           description:
             'Set to true if this command is expected to be interactive (e.g., requires password, y/n confirmation). The tool will return the first chunk of output and the PID immediately, allowing you to respond using `send_shell_input`.',

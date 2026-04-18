@@ -364,22 +364,22 @@ export const GEMINI_3_SET: CoreToolSet = {
       parametersJsonSchema: {
         type: 'object',
         properties: {
-          [SEND_SHELL_INPUT_PARAM_PID]: {
+          pid: {
             type: 'integer',
             description: 'The process ID (PID) of the background process.',
           },
-          [SEND_SHELL_INPUT_PARAM_INPUT]: {
+          input: {
             type: 'string',
             description:
               'The input string to send. Use `\\n` or `\\r` for Enter.',
           },
-          [SEND_SHELL_INPUT_PARAM_SENSITIVE]: {
+          is_sensitive: {
             type: 'boolean',
             description:
               'If true, the input will not be logged to the model history (use for passwords).',
           },
         },
-        required: [SEND_SHELL_INPUT_PARAM_PID, SEND_SHELL_INPUT_PARAM_INPUT],
+        required: ['pid', 'input'],
       },
     }) as FunctionDeclaration,
 
