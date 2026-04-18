@@ -1911,6 +1911,9 @@ export class Config implements McpContext, AgentLoopContext {
         this.modelQuotas.set(activeModel, { remaining, limit });
         this.emitQuotaChangedEvent();
       }
+      if (remaining > 0) {
+        this.modelAvailabilityService.markHealthy(activeModel);
+      }
     }
   }
 
