@@ -425,20 +425,28 @@ export const Footer: React.FC = () => {
         break;
       }
       case 'token-count': {
-        let total = 0;
-        for (const m of Object.values(uiState.sessionStats.metrics.models))
-          total += m.tokens.total;
-        if (total > 0) {
+        let totalInput = 0;
+        let totalOutput = 0;
+        for (const m of Object.values(uiState.sessionStats.metrics.models)) {
+          totalInput += m.tokens.input;
+          totalOutput += m.tokens.candidates;
+        }
+        if (totalInput > 0 || totalOutput > 0) {
           const formatter = new Intl.NumberFormat('en-US', {
             notation: 'compact',
             maximumFractionDigits: 1,
           });
-          const formatted = formatter.format(total).toLowerCase();
+          const formattedIn = formatter.format(totalInput).toLowerCase();
+          const formattedOut = formatter.format(totalOutput).toLowerCase();
           addCol(
             id,
             header,
-            () => <Text color={itemColor}>{formatted} tokens</Text>,
-            formatted.length + 7,
+            () => (
+              <Text color={itemColor}>
+                In: {formattedIn} | Out: {formattedOut}
+              </Text>
+            ),
+            formattedIn.length + formattedOut.length + 12,
           );
         }
         break;

@@ -38,7 +38,7 @@ export const GeminiMessage: React.FC<GeminiMessageProps> = ({
     if (tokenCount?.input !== undefined || tokenCount?.output !== undefined) {
       const inTokens = tokenCount.input?.toLocaleString() ?? '?';
       const outTokens = tokenCount.output?.toLocaleString() ?? '?';
-      stats.push(`(In: ${inTokens} | Out: ${outTokens})`);
+      stats.push(`(In: +${inTokens} | Out: +${outTokens})`);
     }
     if (stats.length > 0) {
       statsString = ` ${stats.join(' ')}\n`;
