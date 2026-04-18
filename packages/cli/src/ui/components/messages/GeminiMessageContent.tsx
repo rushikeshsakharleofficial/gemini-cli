@@ -29,33 +29,15 @@ export const GeminiMessageContent: React.FC<GeminiMessageContentProps> = ({
   isPending,
   availableTerminalHeight,
   terminalWidth,
-  model,
-  tokenCount,
 }) => {
   const { renderMarkdown } = useUIState();
   const originalPrefix = '✦ ';
   const prefixWidth = originalPrefix.length;
 
-  let statsString = '';
-  if (model || tokenCount) {
-    const stats: string[] = [];
-    if (model) stats.push(`[${model}]`);
-    if (tokenCount?.input !== undefined || tokenCount?.output !== undefined) {
-      const inTokens = tokenCount.input?.toLocaleString() ?? '?';
-      const outTokens = tokenCount.output?.toLocaleString() ?? '?';
-      stats.push(`(In: +${inTokens} | Out: +${outTokens})`);
-    }
-    if (stats.length > 0) {
-      statsString = ` ${stats.join(' ')}\n`;
-    }
-  }
-
-  const fullText = statsString ? `${statsString}${text}` : text;
-
   return (
     <Box flexDirection="column" paddingLeft={prefixWidth}>
       <MarkdownDisplay
-        text={fullText}
+        text={text}
         isPending={isPending}
         availableTerminalHeight={
           availableTerminalHeight === undefined
