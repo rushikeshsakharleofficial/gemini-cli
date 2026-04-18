@@ -51,6 +51,7 @@ import {
   PARAM_ADDITIONAL_PERMISSIONS,
   SEND_SHELL_INPUT_PARAM_PID,
   SEND_SHELL_INPUT_PARAM_INPUT,
+  SEND_SHELL_INPUT_PARAM_SENSITIVE,
 } from './definitions/base-declarations.js';
 import type { MessageBus } from '../confirmation-bus/message-bus.js';
 import {
@@ -591,6 +592,7 @@ export class ShellToolInvocation extends BaseToolInvocation<
             backgroundCompletionBehavior:
               this.context.config.getShellBackgroundCompletionBehavior(),
             originalCommand: strippedCommand,
+            isInteractive: !!this.params.interactive,
           },
         );
 
@@ -716,10 +718,10 @@ export class ShellToolInvocation extends BaseToolInvocation<
           // Native Failure Analysis
           llmContentParts.push('\n[FAILURE ANALYSIS]');
           llmContentParts.push(`The command '${this.params.command}' failed with exit code ${result.exitCode}.`);
-          if (result.output.toLowerCase().includes('permission denied') || result.output.toLowerCase().includes('access is denied')) {
-            llmContentParts.push('Hint: This appears to be a permissions issue. Try running with elevated privileges or check file/folder ownership.');
-          } else if (result.output.toLowerCase().includes('not found') || result.output.toLowerCase().includes('is not recognized')) {
-            llmContentParts.push('Hint: A required executable or file was not found. Verify your PATH or the existence of the file.');
+          
+          const hint = getRemediationHint(result.output);
+          if (hint) {
+            llmContentParts.push(`Hint: ${hint}`);
           } else {
             llmContentParts.push('Hint: Analyze the stderr above to understand the root cause. Do NOT blindly retry without a fix.');
           }
@@ -1036,6 +1038,7 @@ export class ShellTool extends BaseDeclarativeTool<
 export interface SendShellInputToolParams {
   [SEND_SHELL_INPUT_PARAM_PID]: number;
   [SEND_SHELL_INPUT_PARAM_INPUT]: string;
+  [SEND_SHELL_INPUT_PARAM_SENSITIVE]?: boolean;
 }
 
 export class SendShellInputToolInvocation extends BaseToolInvocation<
@@ -1052,7 +1055,8 @@ export class SendShellInputToolInvocation extends BaseToolInvocation<
   }
 
   getDescription(): string {
-    return `Sending input to shell process ${this.params[SEND_SHELL_INPUT_PARAM_PID]}`;
+    const pid = this.params[SEND_SHELL_INPUT_PARAM_PID];
+    return `Sending input to shell process ${pid}`;
   }
 
   override getDisplayTitle(): string {
@@ -1062,6 +1066,7 @@ export class SendShellInputToolInvocation extends BaseToolInvocation<
   override async execute(_signal: AbortSignal): Promise<ToolResult> {
     const pid = this.params[SEND_SHELL_INPUT_PARAM_PID];
     const input = this.params[SEND_SHELL_INPUT_PARAM_INPUT];
+    const isSensitive = !!this.params[SEND_SHELL_INPUT_PARAM_SENSITIVE];
 
     if (!ShellExecutionService.isPtyActive(pid)) {
       return {
@@ -1076,9 +1081,21 @@ export class SendShellInputToolInvocation extends BaseToolInvocation<
 
     try {
       ShellExecutionService.writeToPty(pid, input);
+      
+      // Wait for process to process input and emit new buffer
+      await new Promise(resolve => setTimeout(resolve, 500));
+      
+      const isActive = ShellExecutionService.isPtyActive(pid);
+      
+      // Provide a tailored message based on the process state
+      const statusMessage = isActive 
+        ? `Sent input to active process ${pid}. The process is still running and may be waiting for further input.` 
+        : `Sent input to process ${pid}. The process has since exited.`;
+
+      const inputDisplay = isSensitive ? '********' : input;
       return {
-        llmContent: `Successfully sent input to process ${pid}.`,
-        returnDisplay: `Input sent to process ${pid}.`,
+        llmContent: `Successfully sent input to process ${pid}. \n[PROCESS STATUS]: ${isActive ? 'STILL RUNNING' : 'EXITED'}\n${statusMessage}`,
+        returnDisplay: `Input '${inputDisplay}' sent to process ${pid}.`,
       };
     } catch (error: unknown) {
       const errorMessage =

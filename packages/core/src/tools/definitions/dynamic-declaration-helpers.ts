@@ -30,6 +30,8 @@ import {
   SEND_SHELL_INPUT_TOOL_NAME,
   SEND_SHELL_INPUT_PARAM_PID,
   SEND_SHELL_INPUT_PARAM_INPUT,
+  SEND_SHELL_INPUT_PARAM_SENSITIVE,
+  SHELL_PARAM_INTERACTIVE,
   } from './base-declarations.js';
 
   /**
@@ -52,12 +54,16 @@ import {
           description:
             'The input string to send. Use `\\n` or `\\r` for Enter.',
         },
+        [SEND_SHELL_INPUT_PARAM_SENSITIVE]: {
+          type: 'boolean',
+          description:
+            'If true, the input will not be logged to the model history (use for passwords).',
+        },
       },
       required: [SEND_SHELL_INPUT_PARAM_PID, SEND_SHELL_INPUT_PARAM_INPUT],
     },
   };
   }
-
   /**
   * Generates the platform-specific description for the shell tool.
 
@@ -143,6 +149,11 @@ export function getShellDeclaration(
           type: 'boolean',
           description:
             'Set to true if this command should be run in the background (e.g. for long-running servers or watchers). The command will be started, allowed to run for a brief moment to check for immediate errors, and then moved to the background.',
+        },
+        [SHELL_PARAM_INTERACTIVE]: {
+          type: 'boolean',
+          description:
+            'Set to true if this command is expected to be interactive (e.g., requires password, y/n confirmation). The tool will return the first chunk of output and the PID immediately, allowing you to respond using `send_shell_input`.',
         },
         delay_ms: {
           type: 'integer',

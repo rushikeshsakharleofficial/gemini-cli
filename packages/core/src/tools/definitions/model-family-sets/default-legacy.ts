@@ -347,26 +347,32 @@ export const DEFAULT_LEGACY_SET: CoreToolSet = {
       enableToolSandboxing,
     ),
 
-  send_shell_input: () => ({
-    name: SEND_SHELL_INPUT_TOOL_NAME,
-    description:
-      'Sends an input string (e.g., keystrokes, passwords, or answers to prompts) to a running background shell process identified by its PID.',
-    parametersJsonSchema: {
-      type: 'object',
-      properties: {
-        [SEND_SHELL_INPUT_PARAM_PID]: {
-          type: 'integer',
-          description: 'The process ID (PID) of the background process.',
+  send_shell_input: () =>
+    ({
+      name: SEND_SHELL_INPUT_TOOL_NAME,
+      description:
+        'Sends an input string (e.g., keystrokes, passwords, or answers to prompts) to a running background shell process identified by its PID.',
+      parametersJsonSchema: {
+        type: 'object',
+        properties: {
+          [SEND_SHELL_INPUT_PARAM_PID]: {
+            type: 'integer',
+            description: 'The process ID (PID) of the background process.',
+          },
+          [SEND_SHELL_INPUT_PARAM_INPUT]: {
+            type: 'string',
+            description:
+              'The input string to send. Use `\\n` or `\\r` for Enter.',
+          },
+          [SEND_SHELL_INPUT_PARAM_SENSITIVE]: {
+            type: 'boolean',
+            description:
+              'If true, the input will not be logged to the model history (use for passwords).',
+          },
         },
-        [SEND_SHELL_INPUT_PARAM_INPUT]: {
-          type: 'string',
-          description:
-            'The input string to send. Use `\\n` or `\\r` for Enter.',
-        },
+        required: [SEND_SHELL_INPUT_PARAM_PID, SEND_SHELL_INPUT_PARAM_INPUT],
       },
-      required: [SEND_SHELL_INPUT_PARAM_PID, SEND_SHELL_INPUT_PARAM_INPUT],
-    },
-  }),
+    }) as FunctionDeclaration,
 
   replace: {
     name: EDIT_TOOL_NAME,

@@ -56,11 +56,13 @@ export const READ_FILE_PARAM_END_LINE = 'end_line';
 export const SHELL_TOOL_NAME = 'run_shell_command';
 export const SHELL_PARAM_COMMAND = 'command';
 export const SHELL_PARAM_IS_BACKGROUND = 'is_background';
+export const SHELL_PARAM_INTERACTIVE = 'interactive';
 
 // -- send_shell_input --
 export const SEND_SHELL_INPUT_TOOL_NAME = 'send_shell_input';
 export const SEND_SHELL_INPUT_PARAM_PID = 'pid';
 export const SEND_SHELL_INPUT_PARAM_INPUT = 'input';
+export const SEND_SHELL_INPUT_PARAM_SENSITIVE = 'is_sensitive';
 
 // -- write_file --
 export const WRITE_FILE_TOOL_NAME = 'write_file';

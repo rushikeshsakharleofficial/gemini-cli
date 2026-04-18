@@ -105,6 +105,7 @@ export interface ShellExecutionConfig {
   backgroundCompletionBehavior?: 'inject' | 'notify' | 'silent';
   originalCommand?: string;
   sessionId?: string;
+  isInteractive?: boolean;
 }
 
 /**
@@ -326,6 +327,7 @@ export class ShellExecutionService {
     shouldUseNodePty: boolean,
     shellExecutionConfig: ShellExecutionConfig,
   ): Promise<ShellExecutionHandle> {
+    const isInteractive = shellExecutionConfig.isInteractive ?? false;
     if (shouldUseNodePty) {
       const ptyInfo = await getPty();
       if (ptyInfo) {
@@ -350,7 +352,7 @@ export class ShellExecutionService {
       onOutputEvent,
       abortSignal,
       shellExecutionConfig,
-      shouldUseNodePty,
+      isInteractive || shouldUseNodePty,
     );
   }
 
@@ -813,6 +815,15 @@ export class ShellExecutionService {
         }
 
         return;
+      }
+
+      if (shellExecutionConfig.isInteractive && child.pid) {
+        const pid = child.pid;
+        setTimeout(() => {
+          if (ExecutionLifecycleService.isActive(pid)) {
+            ExecutionLifecycleService.background(pid);
+          }
+        }, 500);
       }
 
       return { pid: child.pid, result };
@@ -1279,6 +1290,15 @@ export class ShellExecutionService {
       };
 
       abortSignal.addEventListener('abort', abortHandler, { once: true });
+
+      if (shellExecutionConfig.isInteractive) {
+        // For interactive sessions, resolve early after allowing buffer to fill
+        setTimeout(() => {
+          if (ExecutionLifecycleService.isActive(ptyPid)) {
+            ExecutionLifecycleService.background(ptyPid);
+          }
+        }, 500);
+      }
 
       return { pid: ptyPid, result };
     } catch (e) {
