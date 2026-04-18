@@ -165,11 +165,15 @@ export type HistoryItemUser = HistoryItemBase & {
 export type HistoryItemGemini = HistoryItemBase & {
   type: 'gemini';
   text: string;
+  model?: string;
+  tokenCount?: { input?: number; output?: number };
 };
 
 export type HistoryItemGeminiContent = HistoryItemBase & {
   type: 'gemini_content';
   text: string;
+  model?: string;
+  tokenCount?: { input?: number; output?: number };
 };
 
 export type HistoryItemInfo = HistoryItemBase & {

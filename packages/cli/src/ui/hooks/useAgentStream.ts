@@ -291,8 +291,21 @@ export const useAgentStream = ({
         case 'elicitation_request':
         case 'elicitation_response':
         case 'usage':
-        case 'custom':
-          // These events are currently not handled in the UI
+          if (event.usage) {
+            setPendingHistoryItem((item) => {
+              if (item?.type === 'gemini' || item?.type === 'gemini_content') {
+                return {
+                  ...item,
+                  model: event.usage.model,
+                  tokenCount: {
+                    input: event.usage.inputTokens,
+                    output: event.usage.outputTokens,
+                  },
+                };
+              }
+              return item;
+            });
+          }
           break;
 
         default:
