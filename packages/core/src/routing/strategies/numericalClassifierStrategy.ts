@@ -22,6 +22,7 @@ import { LlmRole } from '../../telemetry/types.js';
 // The number of recent history turns to provide to the router for context.
 const HISTORY_TURNS_FOR_CONTEXT = 8;
 
+const LITE_MODEL = 'flash-lite';
 const FLASH_MODEL = 'flash';
 const PRO_MODEL = 'pro';
 
@@ -185,7 +186,7 @@ export class NumericalClassifierStrategy implements RoutingStrategy {
   ): Promise<{
     threshold: number;
     groupLabel: string;
-    modelAlias: typeof FLASH_MODEL | typeof PRO_MODEL;
+    modelAlias: typeof LITE_MODEL | typeof FLASH_MODEL | typeof PRO_MODEL;
   }> {
     const threshold = await config.getResolvedClassifierThreshold();
     const remoteThresholdValue = await config.getClassifierThreshold();
@@ -197,7 +198,14 @@ export class NumericalClassifierStrategy implements RoutingStrategy {
       groupLabel = 'Default';
     }
 
-    const modelAlias = score >= threshold ? PRO_MODEL : FLASH_MODEL;
+    let modelAlias: typeof LITE_MODEL | typeof FLASH_MODEL | typeof PRO_MODEL;
+    if (score >= threshold) {
+      modelAlias = PRO_MODEL;
+    } else if (score >= threshold / 2) {
+      modelAlias = FLASH_MODEL;
+    } else {
+      modelAlias = LITE_MODEL;
+    }
 
     return { threshold, groupLabel, modelAlias };
   }

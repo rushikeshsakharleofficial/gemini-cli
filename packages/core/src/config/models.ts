@@ -233,6 +233,25 @@ export function resolveClassifierModel(
     }
     return resolveModel(GEMINI_MODEL_ALIAS_FLASH);
   }
+
+  if (modelAlias === GEMINI_MODEL_ALIAS_FLASH_LITE) {
+    if (
+      requestedModel === DEFAULT_GEMINI_MODEL_AUTO ||
+      requestedModel === DEFAULT_GEMINI_MODEL
+    ) {
+      return DEFAULT_GEMINI_FLASH_LITE_MODEL;
+    }
+    if (
+      requestedModel === PREVIEW_GEMINI_MODEL_AUTO ||
+      requestedModel === PREVIEW_GEMINI_MODEL
+    ) {
+      return useGemini3_1FlashLite
+        ? PREVIEW_GEMINI_3_1_FLASH_LITE_MODEL
+        : DEFAULT_GEMINI_FLASH_LITE_MODEL;
+    }
+    return resolveModel(GEMINI_MODEL_ALIAS_FLASH_LITE, false, useGemini3_1FlashLite);
+  }
+
   return resolveModel(
     requestedModel,
     useGemini3_1,
