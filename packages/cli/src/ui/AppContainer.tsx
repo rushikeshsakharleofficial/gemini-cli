@@ -1380,9 +1380,12 @@ Logging in with Google... Restarting Gemini CLI to continue.
 
       const isSlash = isSlashCommand(submittedValue.trim());
       const isIdle = streamingState === StreamingState.Idle;
+      const isMcpOrConfigReady = isConfigInitialized && isMcpReady;
+      
       const isAgentRunning =
         streamingState === StreamingState.Responding ||
-        isToolExecuting(pendingHistoryItems);
+        isToolExecuting(pendingHistoryItems) ||
+        (!isMcpOrConfigReady && !isIdle); // Also consider it running if it's starting up
 
       if (isSlash && isAgentRunning) {
         const { commandToExecute } = parseSlashCommand(
@@ -1402,7 +1405,6 @@ Logging in with Google... Restarting Gemini CLI to continue.
         return;
       }
 
-      const isMcpOrConfigReady = isConfigInitialized && isMcpReady;
       if ((isSlash && isConfigInitialized) || (isIdle && isMcpOrConfigReady)) {
         if (!isSlash) {
           const permissions = await checkPermissions(submittedValue, config);
