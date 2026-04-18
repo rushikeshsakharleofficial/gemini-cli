@@ -49,6 +49,7 @@ export interface CoreToolSet {
   ask_user: FunctionDeclaration;
   enter_plan_mode: FunctionDeclaration;
   exit_plan_mode: () => FunctionDeclaration;
+  send_shell_input: () => FunctionDeclaration;
   activate_skill: (skillNames: string[]) => FunctionDeclaration;
   update_topic?: FunctionDeclaration;
 }

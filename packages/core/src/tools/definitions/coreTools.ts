@@ -18,6 +18,7 @@ import {
   getExitPlanModeDeclaration,
   getActivateSkillDeclaration,
   getUpdateTopicDeclaration,
+  getSendShellInputDeclaration,
 } from './dynamic-declaration-helpers.js';
 
 // Re-export names for compatibility
@@ -234,6 +235,13 @@ export const UPDATE_TOPIC_DEFINITION: ToolDefinition = {
     return getUpdateTopicDeclaration();
   },
   overrides: (modelId) => getToolSet(modelId).update_topic,
+};
+
+export const SEND_SHELL_INPUT_DEFINITION: ToolDefinition = {
+  get base() {
+    return getSendShellInputDeclaration();
+  },
+  overrides: (modelId) => getToolSet(modelId).send_shell_input(),
 };
 
 // ============================================================================

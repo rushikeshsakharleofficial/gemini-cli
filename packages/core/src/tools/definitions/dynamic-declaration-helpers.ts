@@ -23,15 +23,44 @@ import {
   SHELL_PARAM_IS_BACKGROUND,
   EXIT_PLAN_PARAM_PLAN_FILENAME,
   SKILL_PARAM_NAME,
-  PARAM_ADDITIONAL_PERMISSIONS,
   UPDATE_TOPIC_TOOL_NAME,
   TOPIC_PARAM_TITLE,
   TOPIC_PARAM_SUMMARY,
   TOPIC_PARAM_STRATEGIC_INTENT,
-} from './base-declarations.js';
+  SEND_SHELL_INPUT_TOOL_NAME,
+  SEND_SHELL_INPUT_PARAM_PID,
+  SEND_SHELL_INPUT_PARAM_INPUT,
+  } from './base-declarations.js';
 
-/**
- * Generates the platform-specific description for the shell tool.
+  /**
+  * Returns the FunctionDeclaration for sending input to a shell process.
+  */
+  export function getSendShellInputDeclaration(): FunctionDeclaration {
+  return {
+    name: SEND_SHELL_INPUT_TOOL_NAME,
+    description:
+      'Sends an input string (e.g., keystrokes, passwords, or answers to prompts) to a running background shell process identified by its PID.',
+    parametersJsonSchema: {
+      type: 'object',
+      properties: {
+        [SEND_SHELL_INPUT_PARAM_PID]: {
+          type: 'integer',
+          description: 'The process ID (PID) of the background process.',
+        },
+        [SEND_SHELL_INPUT_PARAM_INPUT]: {
+          type: 'string',
+          description:
+            'The input string to send. Use `\\n` or `\\r` for Enter.',
+        },
+      },
+      required: [SEND_SHELL_INPUT_PARAM_PID, SEND_SHELL_INPUT_PARAM_INPUT],
+    },
+  };
+  }
+
+  /**
+  * Generates the platform-specific description for the shell tool.
+
  */
 export function getShellToolDescription(
   enableInteractiveShell: boolean,

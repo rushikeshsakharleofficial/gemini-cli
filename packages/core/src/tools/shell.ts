@@ -43,10 +43,20 @@ import {
   hasRedirection,
   normalizeCommand,
 } from '../utils/shell-utils.js';
-import { SHELL_TOOL_NAME } from './tool-names.js';
-import { PARAM_ADDITIONAL_PERMISSIONS } from './definitions/base-declarations.js';
+import {
+  SHELL_TOOL_NAME,
+  SEND_SHELL_INPUT_TOOL_NAME,
+} from './tool-names.js';
+import {
+  PARAM_ADDITIONAL_PERMISSIONS,
+  SEND_SHELL_INPUT_PARAM_PID,
+  SEND_SHELL_INPUT_PARAM_INPUT,
+} from './definitions/base-declarations.js';
 import type { MessageBus } from '../confirmation-bus/message-bus.js';
-import { getShellDefinition } from './definitions/coreTools.js';
+import {
+  getShellDefinition,
+  SEND_SHELL_INPUT_DEFINITION,
+} from './definitions/coreTools.js';
 import { resolveToolDeclaration } from './definitions/resolver.js';
 import type { AgentLoopContext } from '../config/agent-loop-context.js';
 import { toPathKey, isSubpath, resolveToRealPath } from '../utils/paths.js';
@@ -702,6 +712,17 @@ export class ShellToolInvocation extends BaseToolInvocation<
             exitCode: result.exitCode,
             isError: true,
           };
+          
+          // Native Failure Analysis
+          llmContentParts.push('\n[FAILURE ANALYSIS]');
+          llmContentParts.push(`The command '${this.params.command}' failed with exit code ${result.exitCode}.`);
+          if (result.output.toLowerCase().includes('permission denied') || result.output.toLowerCase().includes('access is denied')) {
+            llmContentParts.push('Hint: This appears to be a permissions issue. Try running with elevated privileges or check file/folder ownership.');
+          } else if (result.output.toLowerCase().includes('not found') || result.output.toLowerCase().includes('is not recognized')) {
+            llmContentParts.push('Hint: A required executable or file was not found. Verify your PATH or the existence of the file.');
+          } else {
+            llmContentParts.push('Hint: Analyze the stderr above to understand the root cause. Do NOT blindly retry without a fix.');
+          }
         }
 
         if (result.signal) {
@@ -712,6 +733,7 @@ export class ShellToolInvocation extends BaseToolInvocation<
         }
         if (result.pid) {
           llmContentParts.push(`Process Group PGID: ${result.pid}`);
+          llmContentParts.push(`Note: If this process is interactive or still hanging, you can send input using 'send_shell_input(pid=${result.pid}, input="...")'.`);
         }
 
         llmContent = llmContentParts.join('\n');
@@ -1008,5 +1030,117 @@ export class ShellTool extends BaseDeclarativeTool<
       this.context.config.getSandboxEnabled(),
     );
     return resolveToolDeclaration(definition, modelId);
+  }
+}
+
+export interface SendShellInputToolParams {
+  [SEND_SHELL_INPUT_PARAM_PID]: number;
+  [SEND_SHELL_INPUT_PARAM_INPUT]: string;
+}
+
+export class SendShellInputToolInvocation extends BaseToolInvocation<
+  SendShellInputToolParams,
+  ToolResult
+> {
+  constructor(
+    params: SendShellInputToolParams,
+    messageBus: MessageBus,
+    _toolName?: string,
+    _toolDisplayName?: string,
+  ) {
+    super(params, messageBus, _toolName, _toolDisplayName);
+  }
+
+  getDescription(): string {
+    return `Sending input to shell process ${this.params[SEND_SHELL_INPUT_PARAM_PID]}`;
+  }
+
+  override getDisplayTitle(): string {
+    return `Shell Input (PID: ${this.params[SEND_SHELL_INPUT_PARAM_PID]})`;
+  }
+
+  override async execute(_signal: AbortSignal): Promise<ToolResult> {
+    const pid = this.params[SEND_SHELL_INPUT_PARAM_PID];
+    const input = this.params[SEND_SHELL_INPUT_PARAM_INPUT];
+
+    if (!ShellExecutionService.isPtyActive(pid)) {
+      return {
+        llmContent: `Error: Shell process with PID ${pid} is not active or not targetable.`,
+        returnDisplay: `Process ${pid} not active.`,
+        error: {
+          message: `Process ${pid} not active.`,
+          type: ToolErrorType.EXECUTION_FAILED,
+        },
+      };
+    }
+
+    try {
+      ShellExecutionService.writeToPty(pid, input);
+      return {
+        llmContent: `Successfully sent input to process ${pid}.`,
+        returnDisplay: `Input sent to process ${pid}.`,
+      };
+    } catch (error: unknown) {
+      const errorMessage =
+        error instanceof Error ? error.message : String(error);
+      return {
+        llmContent: `Error sending input to process ${pid}: ${errorMessage}`,
+        returnDisplay: `Failed to send input to process ${pid}.`,
+        error: {
+          message: errorMessage,
+          type: ToolErrorType.EXECUTION_FAILED,
+        },
+      };
+    }
+  }
+}
+
+export class SendShellInputTool extends BaseDeclarativeTool<
+  SendShellInputToolParams,
+  ToolResult
+> {
+  static readonly Name = SEND_SHELL_INPUT_TOOL_NAME;
+
+  constructor(messageBus: MessageBus) {
+    const base = SEND_SHELL_INPUT_DEFINITION.base;
+    const description = base.description ?? 'Sends an input string to a running background shell process.';
+    
+    super(
+      SendShellInputTool.Name,
+      'ShellInput',
+      description,
+      Kind.Execute,
+      base.parametersJsonSchema,
+      messageBus,
+      false, // output is not markdown
+      false, // output cannot be updated
+    );
+  }
+
+  protected override validateToolParamValues(
+    params: SendShellInputToolParams,
+  ): string | null {
+    if (params[SEND_SHELL_INPUT_PARAM_PID] <= 0) {
+      return 'PID must be a positive integer.';
+    }
+    return null;
+  }
+
+  protected createInvocation(
+    params: SendShellInputToolParams,
+    messageBus: MessageBus,
+    _toolName?: string,
+    _toolDisplayName?: string,
+  ): ToolInvocation<SendShellInputToolParams, ToolResult> {
+    return new SendShellInputToolInvocation(
+      params,
+      messageBus,
+      _toolName,
+      _toolDisplayName,
+    );
+  }
+
+  override getSchema(modelId?: string) {
+    return resolveToolDeclaration(SEND_SHELL_INPUT_DEFINITION, modelId);
   }
 }

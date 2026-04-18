@@ -57,6 +57,11 @@ export const SHELL_TOOL_NAME = 'run_shell_command';
 export const SHELL_PARAM_COMMAND = 'command';
 export const SHELL_PARAM_IS_BACKGROUND = 'is_background';
 
+// -- send_shell_input --
+export const SEND_SHELL_INPUT_TOOL_NAME = 'send_shell_input';
+export const SEND_SHELL_INPUT_PARAM_PID = 'pid';
+export const SEND_SHELL_INPUT_PARAM_INPUT = 'input';
+
 // -- write_file --
 export const WRITE_FILE_TOOL_NAME = 'write_file';
 export const WRITE_FILE_PARAM_CONTENT = 'content';

@@ -351,6 +351,27 @@ export const GEMINI_3_SET: CoreToolSet = {
       enableToolSandboxing,
     ),
 
+  send_shell_input: () => ({
+    name: SEND_SHELL_INPUT_TOOL_NAME,
+    description:
+      'Sends an input string (e.g., keystrokes, passwords, or answers to prompts) to a running background shell process identified by its PID.',
+    parametersJsonSchema: {
+      type: 'object',
+      properties: {
+        [SEND_SHELL_INPUT_PARAM_PID]: {
+          type: 'integer',
+          description: 'The process ID (PID) of the background process.',
+        },
+        [SEND_SHELL_INPUT_PARAM_INPUT]: {
+          type: 'string',
+          description:
+            'The input string to send. Use `\\n` or `\\r` for Enter.',
+        },
+      },
+      required: [SEND_SHELL_INPUT_PARAM_PID, SEND_SHELL_INPUT_PARAM_INPUT],
+    },
+  }),
+
   replace: {
     name: EDIT_TOOL_NAME,
     description: `Replaces text within a file. By default, the tool expects to find and replace exactly ONE occurrence of \`old_string\`. If you want to replace multiple occurrences of the exact same string, set \`allow_multiple\` to true. This tool requires providing significant context around the change to ensure precise targeting.

@@ -35,7 +35,7 @@ import { canUseRipgrep, RipGrepTool } from '../tools/ripGrep.js';
 import { GlobTool } from '../tools/glob.js';
 import { ActivateSkillTool } from '../tools/activate-skill.js';
 import { EditTool } from '../tools/edit.js';
-import { ShellTool } from '../tools/shell.js';
+import { ShellTool, SendShellInputTool } from '../tools/shell.js';
 import { WriteFileTool } from '../tools/write-file.js';
 import { WebFetchTool } from '../tools/web-fetch.js';
 import { MemoryTool, setGeminiMdFilename } from '../tools/memoryTool.js';
@@ -3590,6 +3590,9 @@ export class Config implements McpContext, AgentLoopContext {
       registry.registerTool(
         new ReadBackgroundOutputTool(this, this.messageBus),
       ),
+    );
+    maybeRegister(SendShellInputTool, () =>
+      registry.registerTool(new SendShellInputTool(this.messageBus)),
     );
     if (!this.isMemoryManagerEnabled()) {
       maybeRegister(MemoryTool, () =>
