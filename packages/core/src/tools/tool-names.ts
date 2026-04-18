@@ -85,7 +85,7 @@ import {
   TOPIC_PARAM_TITLE,
   TOPIC_PARAM_SUMMARY,
   TOPIC_PARAM_STRATEGIC_INTENT,
-} from './definitions/coreTools.js';
+} from './definitions/base-declarations.js';
 
 export {
   GLOB_TOOL_NAME,
