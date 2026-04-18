@@ -111,6 +111,8 @@ export class Scheduler {
   private isCancelling = false;
   private readonly requestQueue: SchedulerQueueItem[] = [];
 
+  private lastInjectionIndex: number;
+
   constructor(options: SchedulerOptions) {
     this.context = options.context;
     this.config = this.context.config;
@@ -127,6 +129,9 @@ export class Scheduler {
     );
     this.executor = new ToolExecutor(this.context);
     this.modifier = new ToolModificationHandler();
+
+    this.lastInjectionIndex =
+      this.config.injectionService.getLatestInjectionIndex();
 
     this.setupMessageBusListener(this.messageBus);
 
@@ -531,6 +536,23 @@ export class Scheduler {
 
     // If we are here, we have active calls (likely Validating or Scheduled) but none progressed.
     // This is a stuck state.
+    return false;
+  }
+
+  private _hasNewSteeringHint(): boolean {
+    const currentIndex = this.config.injectionService.getLatestInjectionIndex();
+    if (currentIndex > this.lastInjectionIndex) {
+      const newHints = this.config.injectionService.getInjectionsAfter(
+        this.lastInjectionIndex,
+        'user_steering',
+      );
+      if (newHints.length > 0) {
+        return true;
+      }
+      // Update lastInjectionIndex even if no 'user_steering' hints were found
+      // to avoid re-checking non-steering injections (like bg completions).
+      this.lastInjectionIndex = currentIndex;
+    }
     return false;
   }
 
