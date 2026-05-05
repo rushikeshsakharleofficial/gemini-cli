@@ -131,11 +131,7 @@ export function getNodeMemoryArgs(isDebugMode: boolean): string[] {
     );
   }
 
-  if (
-    process.env['IS_BINARY'] === 'true' ||
-    process.env['GEMINI_CLI_NO_RELAUNCH'] ||
-    process.env['SANDBOX']
-  ) {
+  if (process.env['GEMINI_CLI_NO_RELAUNCH']) {
     return [];
   }
 
@@ -421,6 +417,7 @@ export async function main() {
   const partialConfig = await loadCliConfig(settings.merged, sessionId, argv, {
     projectHooks: settings.workspace.settings.hooks,
     skipExtensions: true,
+    skipMemoryLoad: true,
   });
 
   adminControlsListner.setConfig(partialConfig);
@@ -853,7 +850,7 @@ export function initializeOutputListenersAndFlush(config?: Config) {
   }
 
   const outputFormat = config?.getOutputFormat();
-  const forceToStderr = outputFormat === 'json' || config === undefined;
+  const forceToStderr = outputFormat === 'json';
 
   coreEvents.drainBacklogs(
     <K extends keyof CoreEvents>(event: K, args: CoreEvents[K]) => {
