@@ -805,6 +805,31 @@ function _doLoadSettings(workspaceDir: string): LoadedSettings {
     workspaceResult = load(workspaceSettingsPath);
   }
 
+  // Auto-discover .mcp.json in project root (compatible with Claude Code / MCP standard).
+  // mcpServers defined in .gemini/settings.json take precedence over .mcp.json.
+  if (!storage.isWorkspaceHomeDir()) {
+    const mcpJsonPath = path.join(workspaceDir, '.mcp.json');
+    try {
+      if (fs.existsSync(mcpJsonPath)) {
+        const mcpJsonContent = fs.readFileSync(mcpJsonPath, 'utf-8');
+        const mcpJson = JSON.parse(mcpJsonContent) as Record<string, unknown>;
+        if (
+          mcpJson &&
+          typeof mcpJson.mcpServers === 'object' &&
+          mcpJson.mcpServers !== null
+        ) {
+          const mcpJsonServers = mcpJson.mcpServers as Record<string, unknown>;
+          workspaceResult.settings.mcpServers = {
+            ...mcpJsonServers,
+            ...(workspaceResult.settings.mcpServers ?? {}),
+          } as Settings['mcpServers'];
+        }
+      }
+    } catch {
+      // Ignore malformed or unreadable .mcp.json
+    }
+  }
+
   const systemOriginalSettings = structuredClone(systemResult.rawSettings);
   const systemDefaultsOriginalSettings = structuredClone(
     systemDefaultsResult.rawSettings,
