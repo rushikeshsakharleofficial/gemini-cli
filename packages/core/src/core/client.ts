@@ -648,6 +648,7 @@ export class GeminiClient {
           // Note: we don't include the pendingRequest in this setHistory,
           // because Turn.run will add it normally.
           this.getChat().setHistory(newHistory, { silent: true });
+          this.toolOutputMaskingService.resetCache();
         }
       } else {
         const newHistory = await this.agentHistoryProvider.manageHistory(
@@ -656,6 +657,7 @@ export class GeminiClient {
         );
         if (newHistory.length !== this.getHistory().length) {
           this.getChat().setHistory(newHistory);
+          this.toolOutputMaskingService.resetCache();
         }
       }
     } else {
@@ -1200,6 +1202,7 @@ export class GeminiClient {
         }
 
         this.chat = await this.startChat(newHistory, resumedData);
+        this.toolOutputMaskingService.resetCache();
         this.updateTelemetryTokenCount();
         this.forceFullIdeContext = true;
       }
@@ -1208,6 +1211,7 @@ export class GeminiClient {
         // We truncated content to save space, but summarization is still "failed".
         // We update the chat context directly without resetting the failure flag.
         this.getChat().setHistory(newHistory);
+        this.toolOutputMaskingService.resetCache();
         this.updateTelemetryTokenCount();
         // We don't reset the chat session fully like in COMPRESSED because
         // this is a lighter-weight intervention.
