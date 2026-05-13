@@ -163,6 +163,7 @@ export interface ComputedSessionStats {
   totalCachedTokens: number;
   totalInputTokens: number;
   totalPromptTokens: number;
+  totalOutputTokens: number;
   totalLinesAdded: number;
   totalLinesRemoved: number;
 }

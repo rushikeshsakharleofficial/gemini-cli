@@ -12,6 +12,8 @@ import {
   MIN_TERMINAL_WIDTH_FOR_FULL_LABEL,
   DEFAULT_COMPRESSION_THRESHOLD,
 } from '../constants.js';
+import { useSessionStats } from '../contexts/SessionContext.js';
+import { computeSessionStats } from '../utils/computeStats.js';
 
 function formatTokenCount(n: number): string {
   if (n >= 1_000_000) return `${(n / 1_000_000).toFixed(1)}M`;
@@ -21,7 +23,7 @@ function formatTokenCount(n: number): string {
 
 export const ContextUsageDisplay = ({
   promptTokenCount,
-  outputTokenCount,
+  outputTokenCount: _outputTokenCount,
   model,
   terminalWidth,
 }: {
@@ -31,6 +33,10 @@ export const ContextUsageDisplay = ({
   terminalWidth: number;
 }) => {
   const settings = useSettings();
+  const { stats } = useSessionStats();
+  const computed = computeSessionStats(stats.metrics);
+  const sessionInputTokens = computed.totalPromptTokens;
+  const sessionOutputTokens = computed.totalOutputTokens;
   const percentage = getContextUsagePercentage(promptTokenCount, model);
   const percentageUsed = (percentage * 100).toFixed(0);
 
@@ -47,7 +53,7 @@ export const ContextUsageDisplay = ({
 
   const showTokenCounts =
     terminalWidth >= MIN_TERMINAL_WIDTH_FOR_FULL_LABEL &&
-    (promptTokenCount > 0 || (outputTokenCount ?? 0) > 0);
+    (sessionInputTokens > 0 || sessionOutputTokens > 0);
 
   const label =
     terminalWidth < MIN_TERMINAL_WIDTH_FOR_FULL_LABEL ? '%' : '% used';
@@ -57,11 +63,11 @@ export const ContextUsageDisplay = ({
       {showTokenCounts && (
         <Box flexDirection="row" gap={1}>
           <Text color={theme.text.secondary}>
-            ↑{formatTokenCount(promptTokenCount)}
+            ↑{formatTokenCount(sessionInputTokens)}
           </Text>
-          {(outputTokenCount ?? 0) > 0 && (
+          {sessionOutputTokens > 0 && (
             <Text color={theme.text.secondary}>
-              ↓{formatTokenCount(outputTokenCount!)}
+              ↓{formatTokenCount(sessionOutputTokens)}
             </Text>
           )}
         </Box>
