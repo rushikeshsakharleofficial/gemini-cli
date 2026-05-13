@@ -295,6 +295,7 @@ export class GeminiClient {
 
   setHistory(history: readonly Content[]) {
     this.getChat().setHistory(history);
+    this.toolOutputMaskingService.resetCache();
     this.updateTelemetryTokenCount();
     this.forceFullIdeContext = true;
   }
