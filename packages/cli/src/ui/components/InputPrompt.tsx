@@ -129,6 +129,7 @@ export interface InputPromptProps {
   streamingState: StreamingState;
   popAllMessages?: () => string | undefined;
   onQueueMessage?: (message: string) => void;
+  onQueueSlashCommand?: (rawInput: string) => void;
   suggestionsPosition?: 'above' | 'below';
   setBannerVisible: (visible: boolean) => void;
 }
@@ -217,6 +218,7 @@ export const InputPrompt: React.FC<InputPromptProps> = ({
   streamingState,
   popAllMessages,
   onQueueMessage,
+  onQueueSlashCommand,
   suggestionsPosition = 'below',
   setBannerVisible,
 }) => {
@@ -470,6 +472,11 @@ export const InputPrompt: React.FC<InputPromptProps> = ({
             handleSubmitAndClear(trimmedMessage);
             return;
           }
+          if (onQueueSlashCommand) {
+            onQueueSlashCommand(trimmedMessage);
+            buffer.setText('');
+            return;
+          }
         }
 
         setQueueErrorMessage(
@@ -486,6 +493,8 @@ export const InputPrompt: React.FC<InputPromptProps> = ({
       setQueueErrorMessage,
       slashCommands,
       handleSubmitAndClear,
+      onQueueSlashCommand,
+      buffer,
     ],
   );
 
