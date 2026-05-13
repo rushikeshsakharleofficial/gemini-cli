@@ -465,6 +465,19 @@ export const Footer: React.FC = () => {
   }
 
   // 3. Transients
+  if (uiState.queuedSlashCommands.length > 0) {
+    addCol(
+      'slash-queued',
+      '',
+      () => (
+        <Text color={theme.status.warning}>
+          ⚡ {uiState.queuedSlashCommands[0]} queued
+        </Text>
+      ),
+      uiState.queuedSlashCommands[0].length + 10,
+      false,
+    );
+  }
   if (corgiMode) addCol('corgi', '', () => <CorgiIndicator />, 5);
   if (showErrorSummary) {
     addCol(
