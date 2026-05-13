@@ -206,6 +206,7 @@ export const Footer: React.FC = () => {
     errorCount,
     showErrorDetails,
     promptTokenCount,
+    outputTokenCount,
     isTrustedFolder,
     terminalWidth,
   } = {
@@ -218,6 +219,7 @@ export const Footer: React.FC = () => {
     errorCount: uiState.errorCount,
     showErrorDetails: uiState.showErrorDetails,
     promptTokenCount: uiState.sessionStats.lastPromptTokenCount,
+    outputTokenCount: uiState.sessionStats.lastOutputTokenCount,
     isTrustedFolder: uiState.isTrustedFolder,
     terminalWidth: uiState.terminalWidth,
   };
@@ -339,6 +341,7 @@ export const Footer: React.FC = () => {
           () => (
             <ContextUsageDisplay
               promptTokenCount={promptTokenCount}
+              outputTokenCount={outputTokenCount}
               model={model}
               terminalWidth={terminalWidth}
             />
