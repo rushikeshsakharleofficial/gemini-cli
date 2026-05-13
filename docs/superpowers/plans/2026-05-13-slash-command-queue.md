@@ -503,6 +503,152 @@ cd /home/rushikesh.sakharle/Projects/gemini-cli && git push fork feat/compress-p
 
 ---
 
+## Task 7: Fix token display — show cumulative session totals
+
+**Problem:** Footer shows `↑43.2k ↓731` where `↑` = current context window size
+(`lastPromptTokenCount`) and `↓` = last single response output
+(`lastOutputTokenCount`). These are different metric types — mixing them gives a
+misleading "total". The correct display is cumulative session totals: how many
+tokens were actually sent and received across all requests this session.
+
+**Fix:** Add `totalOutputTokens` to `computeSessionStats`. Update
+`ContextUsageDisplay` to pull cumulative totals from `useSessionStats()` instead
+of using the raw last-request props.
+
+**Files:**
+
+- Modify: `packages/cli/src/ui/utils/computeStats.ts`
+- Modify: `packages/cli/src/ui/contexts/SessionContext.tsx`
+  (ComputedSessionStats interface)
+- Modify: `packages/cli/src/ui/components/ContextUsageDisplay.tsx`
+
+- [ ] **Step 1: Add `totalOutputTokens` to `computeSessionStats`**
+
+Open `packages/cli/src/ui/utils/computeStats.ts`.
+
+In the `ComputedSessionStats` interface (around line 164), add after
+`totalPromptTokens`:
+
+```typescript
+totalInputTokens: number;
+totalPromptTokens: number;
+totalOutputTokens: number; // ← add: cumulative output/candidate tokens this session
+```
+
+In the `computeSessionStats` function body, add after the `totalInputTokens`
+block (around line 56):
+
+```typescript
+const totalOutputTokens = Object.values(models).reduce(
+  (acc, model) => acc + model.tokens.candidates,
+  0,
+);
+```
+
+Add `totalOutputTokens` to the return object:
+
+```typescript
+return {
+  totalApiTime,
+  totalToolTime,
+  agentActiveTime,
+  apiTimePercent,
+  toolTimePercent,
+  cacheEfficiency,
+  totalDecisions,
+  successRate,
+  agreementRate,
+  totalCachedTokens,
+  totalInputTokens,
+  totalPromptTokens,
+  totalOutputTokens, // ← add
+  totalLinesAdded: files.totalLinesAdded,
+  totalLinesRemoved: files.totalLinesRemoved,
+};
+```
+
+- [ ] **Step 2: Update `ContextUsageDisplay` to use cumulative session totals**
+
+Open `packages/cli/src/ui/components/ContextUsageDisplay.tsx`.
+
+Add import at top (alongside existing imports):
+
+```typescript
+import { useSessionStats } from '../contexts/SessionContext.js';
+import { computeSessionStats } from '../utils/computeStats.js';
+```
+
+Inside the component function, add after the existing hooks:
+
+```typescript
+const { stats } = useSessionStats();
+const computed = computeSessionStats(stats.metrics);
+const sessionInputTokens = computed.totalPromptTokens;
+const sessionOutputTokens = computed.totalOutputTokens;
+```
+
+Change the `showTokenCounts` condition and arrow display to use these cumulative
+values instead of the raw props:
+
+```typescript
+  const showTokenCounts =
+    terminalWidth >= MIN_TERMINAL_WIDTH_FOR_FULL_LABEL &&
+    (sessionInputTokens > 0 || sessionOutputTokens > 0);
+
+  return (
+    <Box flexDirection="row" gap={1}>
+      {showTokenCounts && (
+        <Box flexDirection="row" gap={1}>
+          <Text color={theme.text.secondary}>
+            ↑{formatTokenCount(sessionInputTokens)}
+          </Text>
+          {sessionOutputTokens > 0 && (
+            <Text color={theme.text.secondary}>
+              ↓{formatTokenCount(sessionOutputTokens)}
+            </Text>
+          )}
+        </Box>
+      )}
+      <Text color={textColor}>
+        {percentageUsed}
+        {label}
+      </Text>
+    </Box>
+  );
+```
+
+Note: `promptTokenCount` prop is still used for the `% used` calculation
+(context window fill) — keep that unchanged.
+
+The props `outputTokenCount` is now unused in display (session totals replace
+it). Keep the prop signature unchanged to avoid ripple changes — it just won't
+be used in the display path.
+
+- [ ] **Step 3: Type-check**
+
+```bash
+cd /home/rushikesh.sakharle/Projects/gemini-cli/packages/cli && npx tsc --noEmit 2>&1 | grep "error TS"
+cd /home/rushikesh.sakharle/Projects/gemini-cli/packages/core && npx tsc --noEmit 2>&1 | grep "error TS"
+```
+
+Expected: clean on both.
+
+- [ ] **Step 4: Commit**
+
+```bash
+cd /home/rushikesh.sakharle/Projects/gemini-cli
+git add packages/cli/src/ui/utils/computeStats.ts \
+        packages/cli/src/ui/components/ContextUsageDisplay.tsx
+git commit --author="rushikeshsakharleofficial <rishiananya123@gmail.com>" \
+  -m "fix(cli): show cumulative session token totals in footer
+
+Replace last-request prompt/output counts with session cumulative totals.
+Input arrow now shows total tokens sent across all requests; output arrow
+shows total candidate tokens received. Context % remains context-window based."
+```
+
+---
+
 ## Self-Review
 
 **Spec coverage:**
