@@ -49,6 +49,7 @@ export enum AuthState {
 // Only defining the state enum needed by the UI
 export enum StreamingState {
   Idle = 'idle',
+  Processing = 'processing',
   Responding = 'responding',
   WaitingForConfirmation = 'waiting_for_confirmation',
 }
