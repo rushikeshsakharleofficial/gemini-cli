@@ -506,6 +506,14 @@ export type Message =
       timestamp: Date;
       duration: string;
       content?: string;
+      selectedAuthType?: string;
+      userEmail?: string;
+      tier?: string;
+      currentModel?: string;
+      creditBalance?: number;
+      pooledRemaining?: number;
+      pooledLimit?: number;
+      pooledResetTime?: string;
     }
   | {
       type: MessageType.MODEL_STATS;
