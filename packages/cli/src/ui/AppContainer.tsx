@@ -1334,7 +1334,27 @@ Logging in with Google... Restarting Gemini CLI to continue.
     isCompressing,
   });
 
-  const { enqueueSlashCommand } = useSlashCommandQueue();
+  const { queuedSlashCommands, enqueueSlashCommand, dequeueSlashCommand } =
+    useSlashCommandQueue();
+
+  useEffect(() => {
+    if (
+      streamingState === StreamingState.Idle &&
+      !isCompressing &&
+      queuedSlashCommands.length > 0
+    ) {
+      const cmd = dequeueSlashCommand();
+      if (cmd) {
+        void handleSlashCommand(cmd);
+      }
+    }
+  }, [
+    streamingState,
+    isCompressing,
+    queuedSlashCommands,
+    dequeueSlashCommand,
+    handleSlashCommand,
+  ]);
 
   cancelHandlerRef.current = useCallback(
     (shouldRestorePrompt: boolean = true, clearBuffer: boolean = false) => {
@@ -2536,6 +2556,7 @@ Logging in with Google... Restarting Gemini CLI to continue.
       historyRemountKey,
       activeHooks,
       messageQueue,
+      queuedSlashCommands,
       queueErrorMessage,
       showApprovalModeIndicator,
       allowPlanMode,
@@ -2649,6 +2670,7 @@ Logging in with Google... Restarting Gemini CLI to continue.
       historyRemountKey,
       activeHooks,
       messageQueue,
+      queuedSlashCommands,
       queueErrorMessage,
       showApprovalModeIndicator,
       allowPlanMode,
